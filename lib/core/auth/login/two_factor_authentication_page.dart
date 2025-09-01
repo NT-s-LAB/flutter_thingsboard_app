@@ -11,10 +11,8 @@ import 'package:thingsboard_app/generated/l10n.dart';
 import 'package:thingsboard_app/thingsboard_client.dart';
 import 'package:thingsboard_app/widgets/tb_app_bar.dart';
 
-typedef ProviderDescFunction = String Function(
-  BuildContext context,
-  String? contact,
-);
+typedef ProviderDescFunction =
+    String Function(BuildContext context, String? contact);
 typedef TextFunction = String Function(BuildContext context);
 
 class TwoFactorAuthProviderLoginData {
@@ -30,8 +28,10 @@ class TwoFactorAuthProviderLoginData {
   String icon;
 }
 
-final twoFactorAuthProvidersLoginData =
-    <TwoFaProviderType, TwoFactorAuthProviderLoginData>{
+final twoFactorAuthProvidersLoginData = <
+  TwoFaProviderType,
+  TwoFactorAuthProviderLoginData
+>{
   TwoFaProviderType.TOTP: TwoFactorAuthProviderLoginData(
     nameFunction: (context) => S.of(context).mfaProviderTopt,
     descFunction: (context, contact) => S.of(context).totpAuthDescription,
@@ -41,15 +41,15 @@ final twoFactorAuthProvidersLoginData =
   ),
   TwoFaProviderType.SMS: TwoFactorAuthProviderLoginData(
     nameFunction: (context) => S.of(context).mfaProviderSms,
-    descFunction: (context, contact) =>
-        S.of(context).smsAuthDescription(contact ?? ''),
+    descFunction:
+        (context, contact) => S.of(context).smsAuthDescription(contact ?? ''),
     placeholderFunction: (context) => S.of(context).smsAuthPlaceholder,
     icon: 'message-reply-text-outline',
   ),
   TwoFaProviderType.EMAIL: TwoFactorAuthProviderLoginData(
     nameFunction: (context) => S.of(context).mfaProviderEmail,
-    descFunction: (context, contact) =>
-        S.of(context).emailAuthDescription(contact ?? ''),
+    descFunction:
+        (context, contact) => S.of(context).emailAuthDescription(contact ?? ''),
     placeholderFunction: (context) => S.of(context).emailAuthPlaceholder,
     // translate-me-ignore-next-line
     icon: 'email-outline',
@@ -191,15 +191,17 @@ class _TwoFactorAuthenticationPageState
                                 }
                                 children.add(
                                   Container(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                     child: OutlinedButton.icon(
                                       style: OutlinedButton.styleFrom(
                                         padding: const EdgeInsets.all(16),
                                         alignment: Alignment.centerLeft,
                                       ),
-                                      onPressed: () async =>
-                                          await _selectProvider(type),
+                                      onPressed:
+                                          () async =>
+                                              await _selectProvider(type),
                                       icon: icon,
                                       label: Text(
                                         providerData.nameFunction(context),
@@ -219,8 +221,8 @@ class _TwoFactorAuthenticationPageState
                               final providerConfig = tbContext
                                   .twoFactorAuthProviders
                                   ?.firstWhereOrNull(
-                                (config) => config.type == providerType,
-                              );
+                                    (config) => config.type == providerType,
+                                  );
                               if (providerConfig == null) {
                                 return const SizedBox.shrink();
                               }
@@ -268,9 +270,10 @@ class _TwoFactorAuthenticationPageState
                                               vertical: 16,
                                             ),
                                           ),
-                                          onPressed: disableSendButton
-                                              ? null
-                                              : () => _sendVerificationCode(
+                                          onPressed:
+                                              disableSendButton
+                                                  ? null
+                                                  : () => _sendVerificationCode(
                                                     context,
                                                   ),
                                           child: Text(
@@ -299,7 +302,8 @@ class _TwoFactorAuthenticationPageState
                                                             .stretch,
                                                     children: [
                                                       ValueListenableBuilder<
-                                                          int>(
+                                                        int
+                                                      >(
                                                         valueListenable:
                                                             _countDownTime,
                                                         builder: (
@@ -310,10 +314,10 @@ class _TwoFactorAuthenticationPageState
                                                           if (countDown > 0) {
                                                             return Padding(
                                                               padding:
-                                                                  const EdgeInsets
-                                                                      .symmetric(
-                                                                vertical: 12,
-                                                              ),
+                                                                  const EdgeInsets.symmetric(
+                                                                    vertical:
+                                                                        12,
+                                                                  ),
                                                               child: Text(
                                                                 S
                                                                     .of(context)
@@ -323,8 +327,7 @@ class _TwoFactorAuthenticationPageState
                                                                 textAlign:
                                                                     TextAlign
                                                                         .center,
-                                                                style:
-                                                                    const TextStyle(
+                                                                style: const TextStyle(
                                                                   color: Color(
                                                                     0xFF7F7F7F,
                                                                   ),
@@ -335,13 +338,13 @@ class _TwoFactorAuthenticationPageState
                                                               ),
                                                             );
                                                           } else {
-                                                            return const SizedBox
-                                                                .shrink();
+                                                            return const SizedBox.shrink();
                                                           }
                                                         },
                                                       ),
                                                       ValueListenableBuilder<
-                                                          bool>(
+                                                        bool
+                                                      >(
                                                         valueListenable:
                                                             _hideResendButton,
                                                         builder: (
@@ -351,14 +354,12 @@ class _TwoFactorAuthenticationPageState
                                                         ) {
                                                           if (!hideResendButton) {
                                                             return TextButton(
-                                                              style:
-                                                                  ElevatedButton
-                                                                      .styleFrom(
+                                                              style: ElevatedButton.styleFrom(
                                                                 padding:
-                                                                    const EdgeInsets
-                                                                        .symmetric(
-                                                                  vertical: 16,
-                                                                ),
+                                                                    const EdgeInsets.symmetric(
+                                                                      vertical:
+                                                                          16,
+                                                                    ),
                                                               ),
                                                               onPressed: () {
                                                                 _sendCode();
@@ -370,8 +371,7 @@ class _TwoFactorAuthenticationPageState
                                                               ),
                                                             );
                                                           } else {
-                                                            return const SizedBox
-                                                                .shrink();
+                                                            return const SizedBox.shrink();
                                                           }
                                                         },
                                                       ),
@@ -387,15 +387,13 @@ class _TwoFactorAuthenticationPageState
                                             Expanded(
                                               child: TextButton(
                                                 style: ElevatedButton.styleFrom(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    vertical: 16,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 16,
+                                                      ),
                                                 ),
                                                 onPressed: () async {
-                                                  await _selectProvider(
-                                                    null,
-                                                  );
+                                                  await _selectProvider(null);
                                                 },
                                                 child: Text(
                                                   S.of(context).tryAnotherWay,
@@ -446,7 +444,7 @@ class _TwoFactorAuthenticationPageState
         errorText: S.of(context).verificationCodeInvalid,
       ),
       FormBuilderValidators.match(
-        pattern,
+        RegExp(pattern),
         errorText: S.of(context).verificationCodeInvalid,
       ),
     ];
@@ -499,11 +497,14 @@ class _TwoFactorAuthenticationPageState
               _disableSendButton.value = false;
             });
           } else {
-            overlayService.showErrorNotification( (_) => 
-                e.message ?? S.of(context).codeVerificationFailed);
+            overlayService.showErrorNotification(
+              (_) => e.message ?? S.of(context).codeVerificationFailed,
+            );
           }
         } else {
-          overlayService.showErrorNotification((_) =>  S.of(context).codeVerificationFailed);
+          overlayService.showErrorNotification(
+            (_) => S.of(context).codeVerificationFailed,
+          );
         }
       }
     }

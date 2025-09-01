@@ -1,0 +1,9 @@
+{
+  "thingsboardApiEndpoint": "https://iot.eitek.vn",
+  "appLinksUrlHost": "iot.eitek.vn",
+  "appLinksUrlScheme": "https",
+  "androidApplicationId": "com.eitekiot.app",
+  "androidApplicationName": "eitekiot",
+  "thingsboardOAuth2CallbackUrlScheme": "com.eitekiot.app.auth",
+  "thingsboardAndroidAppSecret": "SkF4S0NZbzRkbGdNR1hMSXlHR2ZaeTRqWllBbWlWbEdGQmJxMXlMREJLYkoyOURRNkFVajRWYTBIMkRaWjVuUg=="
+}
