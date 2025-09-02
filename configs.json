@@ -3,7 +3,7 @@
   "appLinksUrlHost": "iot.eitek.vn",
   "appLinksUrlScheme": "https",
   "androidApplicationId": "com.eitekiot.app",
-  "androidApplicationName": "eitekiot",
+  "androidApplicationName": "Eitek IOT",
   "thingsboardOAuth2CallbackUrlScheme": "com.eitekiot.app.auth",
   "thingsboardAndroidAppSecret": "SkF4S0NZbzRkbGdNR1hMSXlHR2ZaeTRqWllBbWlWbEdGQmJxMXlMREJLYkoyOURRNkFVajRWYTBIMkRaWjVuUg=="
 }

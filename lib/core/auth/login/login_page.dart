@@ -13,7 +13,6 @@ import 'package:thingsboard_app/config/routes/router.dart';
 import 'package:thingsboard_app/constants/assets_path.dart';
 import 'package:thingsboard_app/core/auth/login/bloc/bloc.dart';
 import 'package:thingsboard_app/core/auth/login/di/login_di.dart';
-import 'package:thingsboard_app/core/auth/login/login_page_background.dart';
 import 'package:thingsboard_app/core/auth/login/select_region/choose_region_screen.dart';
 import 'package:thingsboard_app/core/auth/login/select_region/model/region.dart';
 import 'package:thingsboard_app/core/auth/oauth2/i_oauth2_client.dart';
@@ -27,6 +26,27 @@ import 'package:thingsboard_app/utils/services/overlay_service/i_overlay_service
 import 'package:thingsboard_app/utils/ui/tb_text_styles.dart';
 import 'package:thingsboard_app/widgets/tb_progress_indicator.dart';
 
+// A modern, tech-inspired background widget with the new color scheme
+class _ModernLoginPageBackground extends StatelessWidget {
+  const _ModernLoginPageBackground({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF040F24), // A deeper, richer navy blue
+            Color(0xFF1d4580), // The user's primary color
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class LoginPage extends TbPageWidget {
   LoginPage(super.tbContext, {super.key});
 
@@ -36,11 +56,6 @@ class LoginPage extends TbPageWidget {
 
 class _LoginPageState extends TbPageState<LoginPage>
     with WidgetsBindingObserver {
-  final ButtonStyle _oauth2IconButtonStyle = OutlinedButton.styleFrom(
-    padding: const EdgeInsets.all(16),
-    alignment: Alignment.center,
-  );
-
   final _isLoginNotifier = ValueNotifier<bool>(false);
   final _showPasswordNotifier = ValueNotifier<bool>(false);
   final IDeviceInfoService _deviceInfoService = getIt<IDeviceInfoService>();
@@ -78,6 +93,36 @@ class _LoginPageState extends TbPageState<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = const Color(0xFF1d4580);
+    final hintTextColor = Colors.white.withOpacity(0.7);
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      filled: true,
+      fillColor: Colors.black.withOpacity(0.2),
+      hintStyle: TextStyle(color: hintTextColor),
+      labelStyle: TextStyle(color: hintTextColor),
+      errorStyle: const TextStyle(color: Color(0xFFF48A8A)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: accentColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFF48A8A), width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFF48A8A), width: 2),
+      ),
+      prefixIconColor: hintTextColor,
+      suffixIconColor: hintTextColor,
+    );
+
     return BlocProvider<AuthBloc>(
       create:
           (_) =>
@@ -91,360 +136,44 @@ class _LoginPageState extends TbPageState<LoginPage>
       child: Scaffold(
         body: Stack(
           children: [
-            const LoginPageBackground(),
+            const _ModernLoginPageBackground(),
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 switch (state) {
                   case AuthLoadingState():
-                    return const SizedBox.expand(
-                      child: ColoredBox(
-                        color: Color(0x99FFFFFF),
-                        child: Center(child: TbProgressIndicator(size: 50.0)),
-                      ),
-                    );
+                    return const Center(child: TbProgressIndicator(size: 50.0));
                   case AuthDataState():
-                    return Positioned.fill(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(24, 71, 24, 24),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight - (71 + 24),
+                    return Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: accentColor.withOpacity(0.4),
+                                ),
                               ),
-                              child: IntrinsicHeight(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        SvgPicture.asset(
-                                          ThingsboardImage.thingsBoardWithTitle,
-                                          height: 25,
-                                          colorFilter: ColorFilter.mode(
-                                            Theme.of(context).primaryColor,
-                                            BlendMode.srcIn,
-                                          ),
-                                          semanticsLabel:
-                                              S.of(context).logoDefaultValue,
-                                        ),
-                                        const SizedBox(height: 25),
-                                        Visibility(
-                                          visible: selectedRegion != null,
-                                          child: TextButton(
-                                            onPressed: () {
-                                              tbContext.showFullScreenDialog(
-                                                ChooseRegionScreen(
-                                                  tbContext,
-                                                  nASelected:
-                                                      selectedRegion ==
-                                                      Region.northAmerica,
-                                                  europeSelected:
-                                                      selectedRegion ==
-                                                      Region.europe,
-                                                ),
-                                              );
-                                            },
-                                            child: Row(
-                                              children: [
-                                                Text(
-                                                  selectedRegion
-                                                          ?.regionToString(context) ??
-                                                      '',
-                                                  style: TbTextStyles.bodyLarge,
-                                                ),
-                                                const SizedBox(width: 6),
-                                                const Padding(
-                                                  padding: EdgeInsets.only(
-                                                    top: 4,
-                                                  ),
-                                                  child: Icon(
-                                                    Icons
-                                                        .arrow_forward_ios_rounded,
-                                                    size: 12,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 32),
-                                    Align(
-                                      child: Text(
-                                        S.of(context).loginNotification,
-                                        style: TbTextStyles.titleLarge.copyWith(
-                                          color: Colors.black.withValues(
-                                            alpha: .87,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 48),
-                                    if (state.oAuthClients.isNotEmpty)
-                                      _buildOAuth2Buttons(state.oAuthClients),
-                                    Visibility(
-                                      visible: state.oAuthClients.isEmpty,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 16,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                              
-                                                S.of(context).loginWith,
-                                                style: TbTextStyles.bodyMedium
-                                                    .copyWith(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                            alpha: .54,
-                                                          ),
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              OutlinedButton(
-                                                style: _oauth2IconButtonStyle,
-                                                onPressed:
-                                                    () async =>
-                                                        await _onLoginWithBarcode(
-                                                          context,
-                                                        ),
-                                                child: Row(
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      ThingsboardImage
-                                                          // translate-me-ignore-next-line
-                                                          .oauth2Logos['qr-code-logo']!,
-                                                      height: 24,
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                     Text(
-                                                      S.of(context).scanQrCode,
-                                                      style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 10,
-                                        bottom: 16,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Flexible(
-                                            child: Divider(
-                                              color: Colors.black.withValues(
-                                                alpha: .12,
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                            ),
-                                            child: Text(
-                                              S.of(context).or,
-                                              style: TbTextStyles.bodyMedium
-                                                  .copyWith(
-                                                    color: Colors.black
-                                                        .withValues(alpha: .54),
-                                                  ),
-                                            ),
-                                          ),
-                                          Flexible(
-                                            child: Divider(
-                                              color: Colors.black.withValues(
-                                                alpha: .12,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    AutofillGroup(
-                                      child: FormBuilder(
-                                        key: _loginFormKey,
-                                        autovalidateMode:
-                                            AutovalidateMode.disabled,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            FormBuilderTextField(
-                                              autofillHints: const [
-                                                AutofillHints.email,
-                                              ],
-                                              name: 'username',
-                                              keyboardType:
-                                                  TextInputType.emailAddress,
-                                              validator:
-                                                  FormBuilderValidators.compose([
-                                                    FormBuilderValidators.required(
-                                                      errorText:
-                                                          S
-                                                              .of(context)
-                                                              .emailRequireText,
-                                                    ),
-                                                    FormBuilderValidators.email(
-                                                      errorText:
-                                                          S
-                                                              .of(context)
-                                                              .emailInvalidText,
-                                                    ),
-                                                  ]),
-                                              decoration: InputDecoration(
-                                                border:
-                                                    const OutlineInputBorder(),
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                      borderSide: BorderSide(
-                                                        color: Colors.black
-                                                            .withValues(
-                                                              alpha: .12,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                labelText: S.of(context).email,
-                                                labelStyle: TbTextStyles
-                                                    .bodyLarge
-                                                    .copyWith(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                            alpha: .54,
-                                                          ),
-                                                    ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 24),
-                                            ValueListenableBuilder(
-                                              valueListenable:
-                                                  _showPasswordNotifier,
-                                              builder: (
-                                                BuildContext context,
-                                                bool showPassword,
-                                                child,
-                                              ) {
-                                                return FormBuilderTextField(
-                                                  autofillHints: const [
-                                                    AutofillHints.password,
-                                                  ],
-                                                  name: 'password',
-                                                  obscureText: !showPassword,
-                                                  validator: FormBuilderValidators.compose([
-                                                    FormBuilderValidators.required(
-                                                      errorText:
-                                                          S
-                                                              .of(context)
-                                                              .passwordRequireText,
-                                                    ),
-                                                  ]),
-                                                  decoration: InputDecoration(
-                                                    suffixIcon: IconButton(
-                                                      icon: Icon(
-                                                        showPassword
-                                                            ? Icons.visibility
-                                                            : Icons
-                                                                .visibility_off,
-                                                      ),
-                                                      onPressed: () {
-                                                        _showPasswordNotifier
-                                                                .value =
-                                                            !_showPasswordNotifier
-                                                                .value;
-                                                      },
-                                                    ),
-                                                    border:
-                                                        const OutlineInputBorder(),
-                                                    enabledBorder:
-                                                        OutlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                color: Colors
-                                                                    .black
-                                                                    .withValues(
-                                                                      alpha:
-                                                                          .12,
-                                                                    ),
-                                                              ),
-                                                        ),
-                                                    labelText:
-                                                        S.of(context).password,
-                                                    labelStyle: TbTextStyles
-                                                        .bodyLarge
-                                                        .copyWith(
-                                                          color: Colors.black
-                                                              .withValues(
-                                                                alpha: .54,
-                                                              ),
-                                                        ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () {
-                                            _forgotPassword();
-                                          },
-                                          child: Text(
-                                            S.of(context).passwordForgotText,
-                                            style: TbTextStyles.bodyMedium,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        _login();
-                                      },
-                                      child: Text(
-                                        S.of(context).login,
-                                        style: TbTextStyles.labelMedium,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 48),
-                                  ],
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 400,
+                                ),
+                                child: _buildLoginForm(
+                                  context,
+                                  state,
+                                  inputDecoration,
+                                  accentColor,
+                                  hintTextColor,
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     );
                 }
@@ -454,25 +183,9 @@ class _LoginPageState extends TbPageState<LoginPage>
               valueListenable: _isLoginNotifier,
               builder: (BuildContext context, bool loading, child) {
                 if (loading) {
-                  final data = MediaQuery.of(context);
-                  var bottomPadding = data.padding.top;
-                  bottomPadding += kToolbarHeight;
-                  return SizedBox.expand(
-                    child: ClipRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200.withValues(alpha: 0.2),
-                          ),
-                          child: Container(
-                            padding: EdgeInsets.only(bottom: bottomPadding),
-                            alignment: Alignment.center,
-                            child: const TbProgressIndicator(size: 50.0),
-                          ),
-                        ),
-                      ),
-                    ),
+                  return Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(child: TbProgressIndicator(size: 50.0)),
                   );
                 } else {
                   return const SizedBox.shrink();
@@ -480,6 +193,241 @@ class _LoginPageState extends TbPageState<LoginPage>
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginForm(
+    BuildContext context,
+    AuthDataState state,
+    InputDecoration inputDecoration,
+    Color accentColor,
+    Color hintTextColor,
+  ) {
+    const buttonColor1 = Color(0xFF42A5F5); // Brighter blue
+    const buttonColor2 = Color(0xFF1976D2); // Deeper blue
+
+    return AutofillGroup(
+      child: FormBuilder(
+        key: _loginFormKey,
+        autovalidateMode: AutovalidateMode.disabled,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SvgPicture.asset(
+              ThingsboardImage.thingsBoardWithTitle,
+              height: 30,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+              semanticsLabel: S.of(context).logoDefaultValue,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              S.of(context).loginNotification,
+              textAlign: TextAlign.center,
+              style: TbTextStyles.titleLarge.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: 32),
+            if (state.oAuthClients.isNotEmpty)
+              _buildOAuth2Buttons(state.oAuthClients),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      state.oAuthClients.isNotEmpty
+                          ? S.of(context).or
+                          : S.of(context).loginWith,
+                      style: TbTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Colors.white.withOpacity(0.2)),
+                  ),
+                ],
+              ),
+            ),
+
+            if (state.oAuthClients.isEmpty)
+              Center(
+                child: Tooltip(
+                  message: S.of(context).scanQrCode,
+                  child: OutlinedButton(
+                    onPressed: () async => await _onLoginWithBarcode(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      shape: const CircleBorder(),
+                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: SvgPicture.asset(
+                      // translate-me-ignore-next-line
+                      ThingsboardImage.oauth2Logos['qr-code-logo']!,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        Colors.white.withOpacity(0.8),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            if (state.oAuthClients.isEmpty) const SizedBox(height: 16),
+
+            FormBuilderTextField(
+              autofillHints: const [AutofillHints.email],
+              name: 'username',
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.emailAddress,
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: S.of(context).emailRequireText,
+                ),
+                FormBuilderValidators.email(
+                  errorText: S.of(context).emailInvalidText,
+                ),
+              ]),
+              decoration: inputDecoration.copyWith(
+                prefixIcon: const Icon(Icons.email_outlined),
+                labelText: S.of(context).email,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ValueListenableBuilder(
+              valueListenable: _showPasswordNotifier,
+              builder: (BuildContext context, bool showPassword, child) {
+                return FormBuilderTextField(
+                  autofillHints: const [AutofillHints.password],
+                  name: 'password',
+                  style: const TextStyle(color: Colors.white),
+                  obscureText: !showPassword,
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                      errorText: S.of(context).passwordRequireText,
+                    ),
+                  ]),
+                  decoration: inputDecoration.copyWith(
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    labelText: S.of(context).password,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        showPassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        _showPasswordNotifier.value =
+                            !_showPasswordNotifier.value;
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _forgotPassword,
+                child: Text(
+                  S.of(context).passwordForgotText,
+                  style: TbTextStyles.bodyMedium.copyWith(color: hintTextColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [buttonColor1, buttonColor2],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: buttonColor1.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _login,
+                child: Text(
+                  S.of(context).login.toUpperCase(),
+                  style: TbTextStyles.labelLarge.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+            _buildRegionSelector(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegionSelector(BuildContext context) {
+    if (selectedRegion == null) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 24.0),
+      child: Center(
+        child: TextButton(
+          onPressed: () {
+            tbContext.showFullScreenDialog(
+              ChooseRegionScreen(
+                tbContext,
+                nASelected: selectedRegion == Region.northAmerica,
+                europeSelected: selectedRegion == Region.europe,
+              ),
+            );
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white.withOpacity(0.7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                selectedRegion?.regionToString(context) ?? '',
+                style: TbTextStyles.bodyMedium.copyWith(
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -502,60 +450,52 @@ class _LoginPageState extends TbPageState<LoginPage>
   }
 
   Widget _buildOAuth2Buttons(List<OAuth2ClientInfo> clients) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(
-            child: Text(
-             S.of(context).loginWith,
-              style: TbTextStyles.bodyMedium.copyWith(
-                color: Colors.black.withValues(alpha: .54),
-              ),
+    final buttons =
+        clients.map((client) => _buildOAuth2Button(client)).toList();
+
+    // Add QR code button to the list
+    buttons.add(
+      Tooltip(
+        message: S.of(context).scanQrCode,
+        child: OutlinedButton(
+          onPressed: () async => await _onLoginWithBarcode(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.all(16),
+            shape: const CircleBorder(),
+            side: BorderSide(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: SvgPicture.asset(
+            // translate-me-ignore-next-line
+            ThingsboardImage.oauth2Logos['qr-code-logo']!,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.8),
+              BlendMode.srcIn,
             ),
           ),
         ),
-        Row(
-          children: [
-            ...clients
-                .asMap()
-                .map(
-                  (index, client) => MapEntry(
-                    index,
-                    _buildOAuth2Button(
-                      client,
-                      true,
-                      index == clients.length - 1,
-                    ),
-                  ),
-                )
-                .values,
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton(
-                style: _oauth2IconButtonStyle,
-                onPressed: ()  => _onLoginWithBarcode(context),
-                child: SvgPicture.asset(
-                  // translate-me-ignore-next-line
-                  ThingsboardImage.oauth2Logos['qr-code']!,
-                  height: 24,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
+    );
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 16,
+      children: buttons,
     );
   }
 
-  Widget _buildOAuth2Button(OAuth2ClientInfo client, bool expand, bool isLast) {
+  Widget _buildOAuth2Button(OAuth2ClientInfo client) {
     Widget? icon;
     if (client.icon != null) {
       if (ThingsboardImage.oauth2Logos.containsKey(client.icon)) {
         icon = SvgPicture.asset(
           ThingsboardImage.oauth2Logos[client.icon]!,
           height: 24,
+          colorFilter: ColorFilter.mode(
+            Colors.white.withOpacity(0.8),
+            BlendMode.srcIn,
+          ),
         );
       } else {
         String strIcon = client.icon!;
@@ -564,34 +504,24 @@ class _LoginPageState extends TbPageState<LoginPage>
         }
         final iconData = MdiIcons.fromString(strIcon);
         if (iconData != null) {
-          icon = Icon(
-            iconData,
-            size: 24,
-            color: Theme.of(context).primaryColor,
-          );
+          icon = Icon(iconData, size: 24, color: Colors.white.withOpacity(0.8));
         }
       }
     }
-    icon ??= Icon(Icons.login, size: 24, color: Theme.of(context).primaryColor);
-    final button = OutlinedButton(
-      style: _oauth2IconButtonStyle,
-      onPressed: () => _oauth2ButtonPressed(client),
-      child: icon,
-    );
+    icon ??= Icon(Icons.login, size: 24, color: Colors.white.withOpacity(0.8));
 
-    if (expand) {
-      return Expanded(
-        child: Padding(
-          padding: EdgeInsets.only(right: isLast ? 0 : 8),
-          child: button,
+    return Tooltip(
+      message: client.name,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.all(16),
+          shape: const CircleBorder(),
+          side: BorderSide(color: Colors.white.withOpacity(0.3)),
         ),
-      );
-    } else {
-      return Padding(
-        padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
-        child: button,
-      );
-    }
+        onPressed: () => _oauth2ButtonPressed(client),
+        child: icon,
+      ),
+    );
   }
 
   Future<void> _oauth2ButtonPressed(OAuth2ClientInfo client) async {
