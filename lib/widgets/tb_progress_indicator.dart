@@ -1,50 +1,66 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:thingsboard_app/constants/assets_path.dart';
 
-class TbProgressIndicator extends ProgressIndicator {
-
+/// Một widget spinner hiện đại, vẽ một cung tròn "thở" và xoay trên một vòng tròn nền.
+/// Hiệu ứng được thiết kế để mượt mà và tinh tế.
+///
+/// LƯU Ý: Vì đây là một StatefulWidget có animation, bạn không thể khởi tạo nó
+/// với từ khóa `const`. Hãy đảm bảo xóa `const` ở những nơi bạn sử dụng widget này.
+class TbProgressIndicator extends StatefulWidget {
   const TbProgressIndicator({
     super.key,
     this.size = 36.0,
-    super.valueColor,
-    super.semanticsLabel,
-    super.semanticsValue,
-  }) : super(
-          value: null,
-        );
+    this.color,
+    this.strokeWidth = 3.5, // Tăng nhẹ độ dày cho nét vẽ rõ ràng hơn
+  });
+
+  /// Kích thước (chiều rộng và chiều cao) của spinner.
   final double size;
 
-  @override
-  State<StatefulWidget> createState() => _TbProgressIndicatorState();
+  /// Màu của spinner. Nếu không được cung cấp, nó sẽ dùng màu `primaryColor` của theme.
+  final Color? color;
 
-  Color _getValueColor(BuildContext context) =>
-      valueColor?.value ?? Theme.of(context).primaryColor;
+  /// Độ dày của nét vẽ cung tròn.
+  final double strokeWidth;
+
+  @override
+  State<TbProgressIndicator> createState() => _TbProgressIndicatorState();
 }
 
 class _TbProgressIndicatorState extends State<TbProgressIndicator>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late CurvedAnimation _rotation;
+  late Animation<double> _sweepAnimation;
+  late Animation<double> _rotationAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      // Giảm thời gian để animation nhanh và dứt khoát hơn
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
-      animationBehavior: AnimationBehavior.preserve,
-    );
-    _rotation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-    _controller.repeat();
-  }
+    )..repeat();
 
-  @override
-  void didUpdateWidget(TbProgressIndicator oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!_controller.isAnimating) _controller.repeat();
+    // Hoạt ảnh điều khiển độ dài của cung tròn ("thở").
+    // Sử dụng đường cong `easeInOutSine` để chuyển động cực kỳ mượt mà.
+    _sweepAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.2, end: pi * 1.6)
+            .chain(CurveTween(curve: Curves.easeInOutSine)),
+        weight: 50.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: pi * 1.6, end: 0.2)
+            .chain(CurveTween(curve: Curves.easeInOutSine)),
+        weight: 50.0,
+      ),
+    ]).animate(_controller);
+
+    // Hoạt ảnh điều khiển sự xoay tròn của cung.
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * pi).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.linear),
+    );
   }
 
   @override
@@ -55,36 +71,75 @@ class _TbProgressIndicatorState extends State<TbProgressIndicator>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        SvgPicture.asset(
-          ThingsboardImage.thingsboardCenter,
-          height: widget.size,
-          width: widget.size,
-          colorFilter: ColorFilter.mode(
-            widget._getValueColor(context),
-            BlendMode.srcIn,
-          ),
-        ),
-        AnimatedBuilder(
-          animation: _rotation,
-          child: SvgPicture.asset(
-            ThingsboardImage.thingsboardOuter,
-            height: widget.size,
-            width: widget.size,
-            colorFilter: ColorFilter.mode(
-              widget._getValueColor(context),
-              BlendMode.srcIn,
-            ),
-          ),
-          builder: (BuildContext context, Widget? child) {
-            return Transform.rotate(
-              angle: _rotation.value * pi * 2,
-              child: child,
+    final Color spinnerColor = widget.color ?? Theme.of(context).primaryColor;
+
+    return Center(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        // AnimatedBuilder sẽ lắng nghe controller và vẽ lại mỗi khi giá trị animation thay đổi.
+        // Bằng cách này, chúng ta không cần dùng đến RotationTransition.
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: _ModernArcPainter(
+                startAngle: _rotationAnimation.value,
+                sweepAngle: _sweepAnimation.value,
+                color: spinnerColor,
+                strokeWidth: widget.strokeWidth,
+              ),
             );
           },
         ),
-      ],
+      ),
     );
   }
 }
+
+/// Lớp CustomPainter được thiết kế lại để vẽ cả vòng tròn nền và cung tròn chuyển động.
+class _ModernArcPainter extends CustomPainter {
+  const _ModernArcPainter({
+    required this.startAngle,
+    required this.sweepAngle,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  final double startAngle;
+  final double sweepAngle;
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // 1. Vẽ vòng tròn nền mờ.
+    final backgroundPaint = Paint()
+      ..color = color.withOpacity(0.2) // Màu nhạt hơn
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // 2. Vẽ cung tròn chính đang chuyển động.
+    final foregroundPaint = Paint()
+      ..color = color // Màu đầy đủ
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round; // Bo tròn hai đầu
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawArc(rect, startAngle - (pi / 2), sweepAngle, false, foregroundPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ModernArcPainter oldDelegate) {
+    // Vẽ lại mỗi khi có sự thay đổi về góc hoặc màu sắc.
+    return oldDelegate.startAngle != startAngle ||
+        oldDelegate.sweepAngle != sweepAngle ||
+        oldDelegate.color != color;
+  }
+}
+
